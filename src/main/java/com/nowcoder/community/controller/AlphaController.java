@@ -2,9 +2,8 @@ package com.nowcoder.community.controller;
 
 
 import com.nowcoder.community.service.AlphaService;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.nowcoder.community.util.CommunityUtil;
+import jakarta.servlet.http.*;
 import org.apache.logging.log4j.message.ReusableMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
@@ -19,24 +18,17 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
-/**
- * ClassName: AlphaController
- * Package: com.nowcoder.community.controller
- * Description:
- *
- * @Author: Muki
- * @Create 2023/7/19 17:09
- * Version 1.0
- */
 @Controller
-@RequestMapping("/alpha" )
+@RequestMapping("/alpha")
 public class AlphaController {
+
     @Autowired
     private AlphaService alphaService;
+
     @RequestMapping("/hello")
     @ResponseBody
     public String sayHello() {
-        return "Hello SpringBoot.";
+        return "Hello Spring Boot.";
     }
 
     @RequestMapping("/data")
@@ -47,34 +39,30 @@ public class AlphaController {
 
     @RequestMapping("/http")
     public void http(HttpServletRequest request, HttpServletResponse response) {
-        //获取请求数据
+        // 获取请求数据
         System.out.println(request.getMethod());
         System.out.println(request.getServletPath());
         Enumeration<String> enumeration = request.getHeaderNames();
         while (enumeration.hasMoreElements()) {
             String name = enumeration.nextElement();
             String value = request.getHeader(name);
-            System.out.println(name +":" + value);
+            System.out.println(name + ": " + value);
         }
         System.out.println(request.getParameter("code"));
 
-        //返回响应数据
+        // 返回响应数据
         response.setContentType("text/html;charset=utf-8");
         try (
                 PrintWriter writer = response.getWriter();
-                ){
-            writer.write("<h1>牛客网<h1>");
+        ) {
+            writer.write("<h1>牛客网</h1>");
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
-    //GET请求
-    /*
-     * 查询学生，当前第几页，一页最多显示几条数据
-     * */
+    // GET请求
+
     // /students?current=1&limit=20
     @RequestMapping(path = "/students", method = RequestMethod.GET)
     @ResponseBody
@@ -94,7 +82,7 @@ public class AlphaController {
         return "a student";
     }
 
-    //POST请求
+    // POST请求
     @RequestMapping(path = "/student", method = RequestMethod.POST)
     @ResponseBody
     public String saveStudent(String name, int age) {
@@ -103,18 +91,17 @@ public class AlphaController {
         return "success";
     }
 
-    // /响应html数据
-    /*不加@responseBody默认返回HTML*/
+    // 响应HTML数据
+
     @RequestMapping(path = "/teacher", method = RequestMethod.GET)
     public ModelAndView getTeacher() {
         ModelAndView mav = new ModelAndView();
         mav.addObject("name", "张三");
-        mav.addObject("age",30);
+        mav.addObject("age", 30);
         mav.setViewName("/demo/view");
         return mav;
     }
 
-    // 另一种响应HTML数据的方式，更加简洁，建议使用
     @RequestMapping(path = "/school", method = RequestMethod.GET)
     public String getSchool(Model model) {
         model.addAttribute("name", "北京大学");
@@ -122,15 +109,15 @@ public class AlphaController {
         return "/demo/view";
     }
 
-    //响应JSON数据(异步请求)
-    //网页不刷新，但是需要访问服务器，返回数据
-    //Java对象 -> Json字符串 -> JS对象
+    // 响应JSON数据(异步请求)
+    // Java对象 -> JSON字符串 -> JS对象
+
     @RequestMapping(path = "/emp", method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getEmp() {
         Map<String, Object> emp = new HashMap<>();
         emp.put("name", "张三");
-        emp.put("age", "30");
+        emp.put("age", 23);
         emp.put("salary", 8000.00);
         return emp;
     }
@@ -139,17 +126,68 @@ public class AlphaController {
     @ResponseBody
     public List<Map<String, Object>> getEmps() {
         List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> emp1 = new HashMap<>();
-        emp1.put("name", "张三");
-        emp1.put("age", 30);
-        emp1.put("salary", 8000.00);
-        list.add(emp1);
-        Map<String, Object> emp2 = new HashMap<>();
-        emp2.put("name", "李四");
-        emp2.put("age", 29);
-        emp2.put("salary", 9000.00);
-        list.add(emp2);
+
+        Map<String, Object> emp = new HashMap<>();
+        emp.put("name", "张三");
+        emp.put("age", 23);
+        emp.put("salary", 8000.00);
+        list.add(emp);
+
+        emp = new HashMap<>();
+        emp.put("name", "李四");
+        emp.put("age", 24);
+        emp.put("salary", 9000.00);
+        list.add(emp);
+
+        emp = new HashMap<>();
+        emp.put("name", "王五");
+        emp.put("age", 25);
+        emp.put("salary", 10000.00);
+        list.add(emp);
+
         return list;
+    }
+
+    // cookie示例
+
+    @RequestMapping(path = "/cookie/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setCookie(HttpServletResponse response) {
+        // 创建cookie
+        Cookie cookie = new Cookie("code", CommunityUtil.generateUUID());
+        // 设置cookie生效的范围
+        cookie.setPath("/community/alpha");
+        // 设置cookie的生存时间
+        cookie.setMaxAge(60 * 10);
+        // 发送cookie
+        response.addCookie(cookie);
+
+        return "set cookie";
+    }
+
+    @RequestMapping(path = "/cookie/get", method = RequestMethod.GET)
+    @ResponseBody
+    public String getCookie(@CookieValue("code") String code) {
+        System.out.println(code);
+        return "get cookie";
+    }
+
+    // session示例
+
+    @RequestMapping(path = "/session/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setSession(HttpSession session) {
+        session.setAttribute("id", 1);
+        session.setAttribute("name", "Test");
+        return "set session";
+    }
+
+    @RequestMapping(path = "/session/get", method = RequestMethod.GET)
+    @ResponseBody
+    public String getSession(HttpSession session) {
+        System.out.println(session.getAttribute("id"));
+        System.out.println(session.getAttribute("name"));
+        return "get session";
     }
 
 }
