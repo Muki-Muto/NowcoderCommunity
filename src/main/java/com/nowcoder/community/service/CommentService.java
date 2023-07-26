@@ -36,7 +36,7 @@ public class CommentService {
     @Autowired
     private DiscussPostService discussPostService;
 
-    public List<Comment> findCommentByEntity(int entityType, int entityId, int offset, int limit) {
+    public List<Comment> findCommentsByEntity(int entityType, int entityId, int offset, int limit) {
         return commentMapper.selectCommentsByEntity(entityType, entityId, offset, limit);
     }
 
